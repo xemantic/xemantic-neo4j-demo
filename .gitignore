@@ -1,0 +1,16 @@
+### Gradle ###
+/.gradle
+/build/
+
+### Claude Code ###
+/.claude/
+
+### IntelliJ IDEA ###
+/.idea/
+!/.idea/copyright/
+*.iws
+*.iml
+*.ipr
+out/
+!**/src/main/**/out/
+!**/src/test/**/out/
