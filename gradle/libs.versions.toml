@@ -1,0 +1,48 @@
+[versions]
+kotlinTarget = "2.2"
+javaTarget = "21"
+
+kotlin = "2.2.21"
+kotlinxCoroutines = "1.10.2"
+
+xemanticKotlinTest = "1.15.2"
+xemanticNeo4jKotlinDriver = "1.0.0"
+
+neo4j = "2025.10.1"
+neo4jDriver = "6.0.2"
+
+ktor = "3.3.2"
+slf4j = "2.0.17"
+logback = "1.5.21"
+
+versionsPlugin = "0.53.0"
+
+[libraries]
+kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
+# we are specifying coroutine dependencies here to ensure that the latest version is used (serialization of kotlin.time.Instant)
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinxCoroutines" }
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinxCoroutines" }
+xemantic-kotlin-test = { module = "com.xemantic.kotlin:xemantic-kotlin-test", version.ref = "xemanticKotlinTest" }
+xemantic-neo4j-kotlin-driver = { module = "com.xemantic.neo4j:xemantic-neo4j-kotlin-driver", version.ref = "xemanticNeo4jKotlinDriver" }
+neo4j-driver = { module = "org.neo4j.driver:neo4j-java-driver",version.ref = "neo4jDriver" }
+neo4j-harness = { module = "org.neo4j.test:neo4j-harness", version.ref = "neo4j" }
+slf4j-jdk-platform-logging = { module = "org.slf4j:slf4j-jdk-platform-logging", version.ref = "slf4j" }
+logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
+
+ktor-server-core = { module = "io.ktor:ktor-server-core", version.ref = "ktor" }
+ktor-server-netty = { module = "io.ktor:ktor-server-netty", version.ref = "ktor" }
+ktor-server-content-negotiation = { module = "io.ktor:ktor-server-content-negotiation", version.ref = "ktor" }
+ktor-server-config-yaml = { module = "io.ktor:ktor-server-config-yaml", version.ref = "ktor" }
+ktor-server-di = { module = "io.ktor:ktor-server-di", version.ref = "ktor" }
+ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
+ktor-serialization-kotlinx-xml = { module = "io.ktor:ktor-serialization-kotlinx-xml", version.ref = "ktor" }
+ktor-server-test-host = { module = "io.ktor:ktor-server-test-host", version.ref = "ktor" }
+ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
+ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
+ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
+
+[plugins]
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlin-plugin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+kotlin-plugin-power-assert = { id = "org.jetbrains.kotlin.plugin.power-assert", version.ref = "kotlin" }
+versions = { id = "com.github.ben-manes.versions", version.ref = "versionsPlugin" }

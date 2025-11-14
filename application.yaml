@@ -1,0 +1,18 @@
+# xemantic-neo4j-demo development configuration
+
+ktor:
+  development: true
+  deployment:
+    port: 8080
+    watch:
+      - classes
+      - resources
+  application:
+    modules:
+      - com.xemantic.neo4j.demo.ServerKt.server
+
+neo4j:
+  uri: ${NEO4J_URI}
+  user: ${NEO4J_USER}
+  password: ${NEO4J_PASSWORD}
+  maxConcurrentSessions: 90
