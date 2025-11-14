@@ -155,7 +155,16 @@ Built on the [xemantic-neo4j-kotlin-driver](https://github.com/xemantic/xemantic
 
 The demo includes a full CRUD API for managing persons and relationships:
 
+**Health Check:**
+- `GET /health` - Database connectivity check with Neo4j temporal type demonstration
+  - Returns `200 OK` with `{"status": "healthy", "timestamp": "..."}` when database is accessible
+  - Returns `503 Service Unavailable` with error details if database is unreachable
+  - Demonstrates Neo4j `datetime()` function and `.asInstant()` conversion to `kotlin.time.Instant`
+
+**Simple Examples:**
 - `GET /sequences/{count}` - Stream numbers from Neo4j (demonstrates Flow-based streaming)
+
+**CRUD Operations:**
 - `POST /people` - Create a person node
 - `GET /people` - List all persons
 - `GET /people/{id}` - Get a specific person
@@ -164,6 +173,7 @@ The demo includes a full CRUD API for managing persons and relationships:
 
 ### Key Implementation Files
 
+- [`HealthCheckApi.kt`](src/main/kotlin/HealthCheckApi.kt) - Health check endpoint with temporal type handling
 - [`SequenceApi.kt`](src/main/kotlin/sequences/SequenceApi.kt) - Complete server example in one file
 - [`Neo4jDependency.kt`](src/main/kotlin/Neo4jDependency.kt) - Neo4j driver setup using Ktor's DI
 - [`Server.kt`](src/main/kotlin/Server.kt) - Full REST API with CRUD operations
@@ -180,7 +190,7 @@ Beyond demonstrating the library, this project is architected for **AI-driven de
 - **Embedded Testing**: `neo4j-harness` provides instant feedback without external dependencies
 - **Type Safety**: Kotlin + Power Assert plugin = crystal-clear error messages
 - **Clear Patterns**: Consistent architecture (DI, layers, resource management) AI can follow
-- **Self-Documenting**: `CLAUDE.md` guides AI behavior and coding standards
+- **Self-Documenting**: [CLAUDE.md](CLAUDE.md) guides AI behavior and coding standards
 
 ### AI-Assisted Development Workflow
 
@@ -212,7 +222,7 @@ The combination of:
 
 ## Using This as a Blueprint
 
-This project is designed as a **template for AI-driven Neo4j API development**. The `CLAUDE.md` file provides comprehensive guidance for AI agents working with this codebase.
+This project is designed as a **template for AI-driven Neo4j API development**. The [CLAUDE.md](CLAUDE.md) file provides comprehensive guidance for AI agents working with this codebase.
 
 ### For AI Agents (Claude Code, etc.)
 
