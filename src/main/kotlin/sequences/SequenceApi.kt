@@ -62,9 +62,9 @@ fun Application.sequenceApi() {
 
 fun main() {
 
-    val neo4jUri = ""
-    val neo4jUser = ""
-    val neo4jPassword = ""
+    val neo4jUri = System.getenv("NEO4J_URI")
+    val neo4jUser = System.getenv("NEO4J_USER")
+    val neo4jPassword = System.getenv("NEO4J_PASSWORD")
 
     val driver = GraphDatabase.driver(
         neo4jUri,

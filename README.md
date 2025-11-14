@@ -23,23 +23,12 @@ fun Application.sequenceApi() {
 
     routing {
 
-        // Simple read operation with suspend function
-        get("/hello-world") {
-            val message = neo4j.read { tx ->
-                tx.run(
-                    """RETURN "Hello World""""
-                ).single()[0].asString()
-            }
-            call.respond(message)
-        }
-
         // Streaming large result sets with Flow
         get("/sequences/{count}") {
             val count = call.parameters["count"]!!.toInt()
             call.respondTextWriter(
                 contentType = ContentType.Text.Plain
             ) {
-                flush()
                 neo4j.flow(
                     query = $$"UNWIND range(1, $count) AS n RETURN n",
                     parameters = mapOf("count" to count)
@@ -64,15 +53,38 @@ fun Application.sequenceApi() {
 - `respondTextWriter` + `flush()` - Non-blocking HTTP streaming to client
 - Parameterized queries with `$$` string interpolation
 
-TODO it should describe that it depends on ktor and it is a ktor module, which can be started like this:
+This example depends on [Ktor](https://ktor.io/) and demonstrates how to set up the library as a Ktor module. For comprehensive Ktor documentation, see the [official Ktor documentation](https://ktor.io/docs/).
 
+### Running the Demo
+
+First, build the executable JAR:
+
+```bash
+./gradlew uberjar
+```
+
+Then set the required environment variables and run:
+
+```bash
+export NEO4J_URI="neo4j://localhost:7687"
+export NEO4J_USER="neo4j"
+export NEO4J_PASSWORD="your-password"
+
+java -jar build/libs/xemantic-neo4j-demo-0.1.0-SNAPSHOT-uberjar.jar
+```
+
+The server will start on port 8080 (configurable in `application.yaml`).
+
+### Setting Up as a Ktor Module
+
+Here's how to start a minimal server with the library:
 
 ```kotlin
 fun main() {
 
-    val neo4jUri = ""
-    val neo4jUser = ""
-    val neo4jPassword = ""
+    val neo4jUri = System.getenv("NEO4J_URI")
+    val neo4jUser = System.getenv("NEO4J_USER")
+    val neo4jPassword = System.getenv("NEO4J_PASSWORD")
 
     val driver = GraphDatabase.driver(
         neo4jUri,
@@ -92,6 +104,7 @@ fun main() {
         dependencies.provide<Neo4jOperations> { neo4jOperations }
         sequenceApi()
     }.start(wait = true)
+
 }
 ```
 
@@ -199,19 +212,65 @@ The combination of:
 
 ## Using This as a Blueprint
 
-**For your own Neo4j API:**
+This project is designed as a **template for AI-driven Neo4j API development**. The `CLAUDE.md` file provides comprehensive guidance for AI agents working with this codebase.
 
-1. Fork this project as a starting point
+### For AI Agents (Claude Code, etc.)
+
+When using this project as a blueprint, AI agents should follow this workflow:
+
+**1. Test-First Development**
+- Write comprehensive test cases in `PeopleApiTest.kt` (or new test files) before implementation
+- Use `xemantic-kotlin-test` DSL (`should`, `have`) for readable, expressive assertions
+- Leverage embedded Neo4j (`neo4j-harness`) for instant feedback without external dependencies
+
+**2. Follow Existing Patterns**
+- Study test structure: given/when/then, `@AfterEach` cleanup, `peopleApiApp()` setup
+- Use `Neo4jOperations` interface for all database operations
+- Apply layered architecture: API → Repository → Neo4j
+
+**3. Autonomous Iteration**
+- Run `./gradlew test` frequently to verify correctness
+- Interpret test failures (Power Assert plugin provides detailed error messages)
+- Refine implementation until all tests pass
+- Iterate autonomously without human intervention
+
+**4. Code Quality Standards** (from `CLAUDE.md`)
+- Use `neo4j.read { }` for queries, `neo4j.write { }` for mutations, `neo4j.flow()` for streaming
+- Use parameterized queries with `$$` string interpolation in query strings
+- Use `.toObject<T>()` for deserializing Neo4j nodes/relationships to data classes
+- Import `.asInstant()` explicitly: `import com.xemantic.neo4j.driver.asInstant`
+- Use `@Serializable` data classes for all request/response models
+- Maintain consistent error handling (e.g., 404 for missing resources)
+
+**5. Testing Patterns** (from `CLAUDE.md`)
+- Use `TestNeo4j.driver()` for embedded Neo4j driver instance
+- Create `DispatchedNeo4jOperations` for test setup (e.g., populating test data)
+- Clean database between tests: `driver.cleanDatabase()` in `@AfterEach`
+- Use `testApplication { }` DSL for HTTP endpoint testing
+- Test timestamps with tolerance: `have(createdAt > (now - 10.seconds))`
+
+### For Human Developers
+
+**Using as a starting point:**
+
+1. Fork this project as a template
 2. Study the patterns: `SequenceApi.kt` for quick examples, full CRUD in `PeopleApi.kt`
 3. Adapt the models and repositories to your domain
 4. Use the test infrastructure to validate your implementation
 5. (Optional) Let AI help via the vibe-coding workflow above
+
+**Key architectural patterns:**
+- **DI Pattern**: Ktor's built-in DI with programmatic providers (`neo4jDriver()`, `neo4jSupport()`, `peopleRepository()`)
+- **Repository Pattern**: `PeopleRepository.kt` demonstrates read/write/flow operations
+- **HTTP Streaming**: `respondStreaming()` helper converts `Flow<T>` to streaming JSON array responses
+- **Dispatcher Control**: `DispatchedNeo4jOperations` wraps driver with custom dispatcher to prevent connection pool exhaustion
 
 **What you get:**
 - Production-ready async/non-blocking Neo4j integration
 - Comprehensive test coverage with embedded Neo4j
 - Clean architecture with DI and resource management
 - Ready for AI-assisted feature development
+- AI agent guidance via `CLAUDE.md`
 
 ## License
 
