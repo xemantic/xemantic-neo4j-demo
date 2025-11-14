@@ -27,6 +27,9 @@ import io.ktor.server.config.MapApplicationConfig
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.testing.*
 import org.junit.jupiter.api.Test
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Instant
 
 class HealthCheckApiTest {
 
@@ -52,9 +55,10 @@ class HealthCheckApiTest {
     }
 
     @Test
-    fun `should return healthy status when database is accessible`() = testApplication {
+    fun `should return healthy status with timestamp when database is accessible`() = testApplication {
         // given
         healthCheckApp()
+        val now = Clock.System.now()
 
         // when
         val response = client.get("/health")
@@ -65,6 +69,11 @@ class HealthCheckApiTest {
             have(contentType()?.contentType == ContentType.Application.Json.contentType)
             body<Map<String, String>>() should {
                 have(get("status") == "healthy")
+                val timestampString = get("timestamp")
+                have(timestampString != null)
+                val timestamp = Instant.parse(timestampString!!)
+                have(timestamp > (now - 10.seconds))
+                have(timestamp < (now + 10.seconds))
             }
         }
     }

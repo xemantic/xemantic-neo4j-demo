@@ -18,13 +18,11 @@ package com.xemantic.neo4j.demo.sequences
 
 import com.xemantic.neo4j.driver.DispatchedNeo4jOperations
 import com.xemantic.neo4j.driver.Neo4jOperations
-import com.xemantic.neo4j.driver.asInstant
 import io.ktor.http.ContentType
 import io.ktor.server.application.Application
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.ktor.server.plugins.di.dependencies
-import io.ktor.server.response.respond
 import io.ktor.server.response.respondTextWriter
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
@@ -40,23 +38,12 @@ fun Application.sequenceApi() {
 
     routing {
 
-        // Simple read operation with suspend function
-        get("/hello-world") {
-            val message = neo4j.read { tx ->
-                tx.run(
-                    """RETURN "Hello World""""
-                ).single()[0].asString()
-            }
-            call.respond(message)
-        }
-
         // Streaming large result sets with Flow
         get("/sequences/{count}") {
             val count = call.parameters["count"]!!.toInt()
             call.respondTextWriter(
                 contentType = ContentType.Text.Plain
             ) {
-                flush()
                 neo4j.flow(
                     query = $$"UNWIND range(1, $count) AS n RETURN n",
                     parameters = mapOf("count" to count)
@@ -67,16 +54,6 @@ fun Application.sequenceApi() {
                     flush()
                 }
             }
-        }
-
-        // Get current date/time from database using asInstant()
-        get("/current-date") {
-            val currentDate = neo4j.read { tx ->
-                tx.run(
-                    "RETURN datetime() AS now"
-                ).single()["now"].asInstant()
-            }
-            call.respond(mapOf("currentDate" to currentDate))
         }
 
     }

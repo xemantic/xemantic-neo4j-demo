@@ -17,6 +17,7 @@
 package com.xemantic.neo4j.demo
 
 import com.xemantic.neo4j.driver.Neo4jOperations
+import com.xemantic.neo4j.driver.asInstant
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
 import io.ktor.server.plugins.di.dependencies
@@ -32,13 +33,19 @@ fun Application.healthCheckApi() {
 
         get("/health") {
             try {
-                val isHealthy = neo4j.read { tx ->
-                    tx.run("RETURN 1").single()[0].asInt() == 1
+                val (isHealthy, timestamp) = neo4j.read { tx ->
+                    val record = tx.run("RETURN 1 AS check, datetime() AS timestamp").single()
+                    val isHealthy = record["check"].asInt() == 1
+                    val timestamp = record["timestamp"].asInstant()
+                    isHealthy to timestamp
                 }
                 if (isHealthy) {
                     call.respond(
                         HttpStatusCode.OK,
-                        mapOf("status" to "healthy")
+                        mapOf(
+                            "status" to "healthy",
+                            "timestamp" to timestamp.toString()
+                        )
                     )
                 } else {
                     call.respond(

@@ -48,10 +48,10 @@ Gradle with Kotlin DSL. Key targets:
 ./gradlew test
 
 # Run a single test class
-./gradlew test --tests "Neo4jKtorServerTest"
+./gradlew test --tests "PeopleApiTest"
 
 # Run a specific test method
-./gradlew test --tests "Neo4jKtorServerTest.should create a person"
+./gradlew test --tests "PeopleApiTest.should create a person"
 
 # Create fat JAR (uberjar)
 ./gradlew uberjar
@@ -108,15 +108,19 @@ Key files:
 - `people/PeopleRepository.kt`: Repository pattern with read/write/flow operations
 - `people/PeopleApi.kt`: REST API endpoints delegating to repository
 - `people/Model.kt`: Data classes with Kotlinx serialization for REST requests/responses
-- `Neo4jResultHttpStreaming.kt`: Helper for streaming Flow results as JSON arrays over HTTP
+- `HttpResponses.kt`: Helper for streaming Flow results as JSON arrays over HTTP
 - `application.yaml`: Configuration including Neo4j connection details
 
 ### Server Structure
 
 Ktor server demonstrating library features through REST endpoints:
 
+**Health Check** (`HealthCheckApi.kt`):
+- `GET /health` - Database connectivity check with Neo4j temporal type demonstration
+- Returns health status with timestamp using `datetime()` and `.asInstant()` conversion
+- Demonstrates proper error handling with appropriate HTTP status codes
+
 **Simple Examples** (`sequences/SequenceApi.kt`):
-- `GET /hello-world` - Basic read operation returning a string from Neo4j
 - `GET /sequences/{count}` - Streaming demo using `neo4j.flow()` with `respondTextWriter` for incremental response
 - Shows memory-efficient processing of large datasets without loading all into memory
 - Example: `/sequences/100000` streams 100k records

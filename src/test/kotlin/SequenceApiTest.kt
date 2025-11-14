@@ -35,9 +35,6 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import org.junit.jupiter.api.Test
-import kotlin.time.Clock
-import kotlin.time.Duration.Companion.seconds
-import kotlin.time.Instant
 
 class SequenceApiTest {
 
@@ -60,22 +57,6 @@ class SequenceApiTest {
             install(io.ktor.client.plugins.contentnegotiation.ContentNegotiation) {
                 json()
             }
-        }
-    }
-
-    @Test
-    fun `should receive hello message`() = testApplication {
-        // given
-        sequenceApiApp()
-
-        // when
-        val response = client.get("/hello-world")
-
-        // then
-        response should {
-            have(status == HttpStatusCode.OK)
-            have(contentType() == ContentType.Text.Plain.withCharset(Charsets.UTF_8))
-            body<String>() sameAs "Hello World"
         }
     }
 
@@ -140,28 +121,6 @@ class SequenceApiTest {
         // then
         response should {
             have(response == "100000")
-        }
-    }
-
-    @Test
-    fun `should get current date from database using asInstant`() = testApplication {
-        // given
-        sequenceApiApp()
-        val now = Clock.System.now()
-
-        // when
-        val response = client.get("/current-date")
-
-        // then
-        response should {
-            have(status == HttpStatusCode.OK)
-            have(contentType()?.contentType == ContentType.Application.Json.contentType)
-            body<Map<String, Instant>>() should {
-                val instant = get("currentDate")
-                have(instant != null)
-                have(instant!! > (now - 10.seconds))
-                have(instant < (now + 10.seconds))
-            }
         }
     }
 
