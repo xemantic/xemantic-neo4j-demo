@@ -36,7 +36,7 @@ Here are the steps:
     ```
 4. Specify your requirements in natural language and wait
 
-The `--dangerously-skip-permissions` will save you some time of approving all the tests run by Claude Code to verify own work.
+The `--dangerously-skip-permissions` flag is optional. It will save you some time of approving all the tests run by Claude Code to verify own work.
 
 You might be asked to review the integration tests which also serve as an executable specification, capable of verifying itself, and catch future regressions, so that AI agent can also do QA of own output.
 
