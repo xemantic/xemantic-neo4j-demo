@@ -3,7 +3,6 @@
 Demo showcasing the [xemantic-neo4j-kotlin-driver](https://github.com/xemantic/xemantic-neo4j-kotlin-driver) - Kotlin coroutine extensions for Neo4j
 
 [<img alt="license" src="https://img.shields.io/github/license/xemantic/xemantic-kotlin-core?color=blue">](https://github.com/xemantic/xemantic-kotlin-core/blob/main/LICENSE)
-
 [<img alt="GitHub Actions Workflow Status" src="https://img.shields.io/github/actions/workflow/status/xemantic/xemantic-kotlin-core/build-main.yml">](https://github.com/xemantic/xemantic-kotlin-core/actions/workflows/build-main.yml)
 [<img alt="GitHub branch check runs" src="https://img.shields.io/github/check-runs/xemantic/xemantic-kotlin-core/main">](https://github.com/xemantic/xemantic-kotlin-core/actions/workflows/build-main.yml)
 [<img alt="GitHub commits since latest release" src="https://img.shields.io/github/commits-since/xemantic/xemantic-kotlin-core/latest">](https://github.com/xemantic/xemantic-kotlin-core/commits/main/)
@@ -14,8 +13,8 @@ Demo showcasing the [xemantic-neo4j-kotlin-driver](https://github.com/xemantic/x
 [<img alt="GitHub code size in bytes" src="https://img.shields.io/github/languages/code-size/xemantic/xemantic-kotlin-core">]()
 [<img alt="GitHub Created At" src="https://img.shields.io/github/created-at/xemantic/xemantic-kotlin-core">](https://github.com/xemantic/xemantic-kotlin-core/commits)
 [<img alt="kotlin version" src="https://img.shields.io/badge/dynamic/toml?url=https%3A%2F%2Fraw.githubusercontent.com%2Fxemantic%2Fxemantic-kotlin-core%2Fmain%2Fgradle%2Flibs.versions.toml&query=versions.kotlin&label=kotlin">](https://kotlinlang.org/docs/releases.html)
-[<img alt="discord users online" src="https://img.shields.io/discord/811561179280965673?label=discord&logo=discord">](https://discord.gg/vQktqqN2Vn)
 
+[<img alt="discord users online" src="https://img.shields.io/discord/811561179280965673?label=discord&logo=discord">](https://discord.gg/vQktqqN2Vn)
 [![Bluesky](https://img.shields.io/badge/Bluesky-0285FF?logo=bluesky&logoColor=fff)](https://bsky.app/profile/xemantic.com)
 
 ## Build your Neo4j-based API with AI
