@@ -14,7 +14,7 @@ Demo showcasing the [xemantic-neo4j-kotlin-driver](https://github.com/xemantic/x
 [<img alt="GitHub code size in bytes" src="https://img.shields.io/github/languages/code-size/xemantic/xemantic-kotlin-core">]()
 [<img alt="GitHub Created At" src="https://img.shields.io/github/created-at/xemantic/xemantic-kotlin-core">](https://github.com/xemantic/xemantic-kotlin-core/commits)
 [<img alt="kotlin version" src="https://img.shields.io/badge/dynamic/toml?url=https%3A%2F%2Fraw.githubusercontent.com%2Fxemantic%2Fxemantic-kotlin-core%2Fmain%2Fgradle%2Flibs.versions.toml&query=versions.kotlin&label=kotlin">](https://kotlinlang.org/docs/releases.html)
-![Discord](https://img.shields.io/discord/811561179280965673?style=flat&logo=discord&label=discord&link=https%3A%2F%2Fdiscord.gg%2FvQktqqN2Vn)
+[<img alt="discord users online" src="https://img.shields.io/discord/811561179280965673?label=discord&logo=discord">](https://discord.gg/vQktqqN2Vn)
 
 [![Bluesky](https://img.shields.io/badge/Bluesky-0285FF?logo=bluesky&logoColor=fff)](https://bsky.app/profile/xemantic.com)
 
@@ -47,8 +47,7 @@ Soon we will add:
 
 I hope it will work well for you. Please give us your feedback on
 
-![Discord](https://img.shields.io/discord/811561179280965673?style=for-the-badge&logo=discord&label=discord&link=https%3A%2F%2Fdiscord.gg%2FvQktqqN2Vn)
-
+[<img alt="discord users online" src="https://img.shields.io/discord/811561179280965673?style=for-the-badge&label=discord&logo=discord">](https://discord.gg/vQktqqN2Vn)
 
 ## What This Demonstrates
 
