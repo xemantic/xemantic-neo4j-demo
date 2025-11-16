@@ -1,6 +1,54 @@
 # xemantic-neo4j-demo
 
-**Demo showcasing the [xemantic-neo4j-kotlin-driver](https://github.com/xemantic/xemantic-neo4j-kotlin-driver) - Kotlin coroutine extensions for Neo4j**
+Demo showcasing the [xemantic-neo4j-kotlin-driver](https://github.com/xemantic/xemantic-neo4j-kotlin-driver) - Kotlin coroutine extensions for Neo4j
+
+[<img alt="license" src="https://img.shields.io/github/license/xemantic/xemantic-kotlin-core?color=blue">](https://github.com/xemantic/xemantic-kotlin-core/blob/main/LICENSE)
+
+[<img alt="GitHub Actions Workflow Status" src="https://img.shields.io/github/actions/workflow/status/xemantic/xemantic-kotlin-core/build-main.yml">](https://github.com/xemantic/xemantic-kotlin-core/actions/workflows/build-main.yml)
+[<img alt="GitHub branch check runs" src="https://img.shields.io/github/check-runs/xemantic/xemantic-kotlin-core/main">](https://github.com/xemantic/xemantic-kotlin-core/actions/workflows/build-main.yml)
+[<img alt="GitHub commits since latest release" src="https://img.shields.io/github/commits-since/xemantic/xemantic-kotlin-core/latest">](https://github.com/xemantic/xemantic-kotlin-core/commits/main/)
+[<img alt="GitHub last commit" src="https://img.shields.io/github/last-commit/xemantic/xemantic-kotlin-core">](https://github.com/xemantic/xemantic-kotlin-core/commits/main/)
+
+[<img alt="GitHub contributors" src="https://img.shields.io/github/contributors/xemantic/xemantic-kotlin-core">](https://github.com/xemantic/xemantic-kotlin-core/graphs/contributors)
+[<img alt="GitHub commit activity" src="https://img.shields.io/github/commit-activity/t/xemantic/xemantic-kotlin-core">](https://github.com/xemantic/xemantic-kotlin-core/commits/main/)
+[<img alt="GitHub code size in bytes" src="https://img.shields.io/github/languages/code-size/xemantic/xemantic-kotlin-core">]()
+[<img alt="GitHub Created At" src="https://img.shields.io/github/created-at/xemantic/xemantic-kotlin-core">](https://github.com/xemantic/xemantic-kotlin-core/commits)
+[<img alt="kotlin version" src="https://img.shields.io/badge/dynamic/toml?url=https%3A%2F%2Fraw.githubusercontent.com%2Fxemantic%2Fxemantic-kotlin-core%2Fmain%2Fgradle%2Flibs.versions.toml&query=versions.kotlin&label=kotlin">](https://kotlinlang.org/docs/releases.html)
+![Discord](https://img.shields.io/discord/811561179280965673?style=flat&logo=discord&label=discord&link=https%3A%2F%2Fdiscord.gg%2FvQktqqN2Vn)
+
+[![Bluesky](https://img.shields.io/badge/Bluesky-0285FF?logo=bluesky&logoColor=fff)](https://bsky.app/profile/xemantic.com)
+
+## Build your Neo4j-based API with AI
+
+AI can build your Neo4j-based API in minutes, and it will be:
+
+- production ready
+- highly performant (non-blocking and streaming IO)
+- designed for incremental extension
+
+Here are the steps:
+
+1. Open this project on GitHub and click `Use this template`.
+2. Clone your new GitHub project
+3. Open terminal in cloned folder and run Claude Code (or any other coding agent)
+    ```
+    claude --dangerously-skip-permissions
+    ```
+4. Specify your requirements in natural language and wait
+
+The `--dangerously-skip-permissions` will save you some time of approving all the tests run by Claude Code to verify own work.
+
+You might be asked to review the integration tests which also serve as an executable specification, capable of verifying itself, and catch future regressions, so that AI agent can also do QA of own output.
+
+Soon we will add:
+- automatic Open API documentation
+- database migrations
+- Docker configuration
+
+I hope it will work well for you. Please give us your feedback on
+
+![Discord](https://img.shields.io/discord/811561179280965673?style=for-the-badge&logo=discord&label=discord&link=https%3A%2F%2Fdiscord.gg%2FvQktqqN2Vn)
+
 
 ## What This Demonstrates
 
