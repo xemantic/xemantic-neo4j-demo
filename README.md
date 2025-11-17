@@ -99,6 +99,48 @@ fun Application.sequenceApi() {
 - `respondTextWriter` + `flush()` - Non-blocking HTTP streaming to client
 - Parameterized queries with `$$` string interpolation
 
+### Testing with Embedded Neo4j
+
+Here's a test example from [`SequenceApiTest.kt`](src/test/kotlin/SequenceApiTest.kt) showing the test-driven development approach:
+
+```kotlin
+@Test
+fun `should stream sequence 10 from neo4j`() = testApplication {
+    // given
+    sequenceApiApp()
+
+    // when
+    val response = client.get("/sequences/10")
+
+    // then
+    response should {
+        have(status == HttpStatusCode.OK)
+        body<String>() sameAs """
+            1
+            2
+            3
+            4
+            5
+            6
+            7
+            8
+            9
+            10
+        """.trimIndent()
+    }
+}
+```
+
+**Testing Features Demonstrated:**
+- `testApplication { }` - Ktor's test DSL for HTTP endpoint testing
+- `sequenceApiApp()` - Helper function setting up the full application stack with embedded Neo4j
+- `should { }` and `have()` - Fluent assertion DSL from [xemantic-kotlin-test](https://github.com/xemantic/xemantic-kotlin-test)
+- `body<String>()` - Type-safe response body deserialization
+- `sameAs` / `sameAsJson` - String/JSON comparison using unified diff format (helps AI agents spot errors in feedback loop)
+- Given/when/then structure for clarity
+
+The test uses `neo4j-harness` for an embedded Neo4j instance, enabling fast feedback without external dependencies - perfect for AI-driven development.
+
 This example depends on [Ktor](https://ktor.io/) and demonstrates how to set up the library as a Ktor module. For comprehensive Ktor documentation, see the [official Ktor documentation](https://ktor.io/docs/).
 
 ### Running the Demo
