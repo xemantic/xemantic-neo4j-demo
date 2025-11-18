@@ -93,7 +93,6 @@ fun Application.sequenceApi() {
 ```
 
 **Key Features Demonstrated:**
-- `neo4j.read { tx -> }` - Coroutine-based read transactions (no callbacks)
 - `neo4j.flow(query, parameters)` - Returns Kotlin `Flow<Record>` for streaming
 - `.collect { }` - Process records incrementally without loading all into memory
 - `respondTextWriter` + `flush()` - Non-blocking HTTP streaming to client
