@@ -91,6 +91,13 @@ dependencies {
     }
 }
 
+tasks.withType<JavaExec> {
+    jvmArgs(
+        "--enable-native-access=ALL-UNNAMED",
+        "--sun-misc-unsafe-memory-access=allow"
+    )
+}
+
 tasks.register<Jar>("uberjar") {
 
     group = "build"
@@ -148,6 +155,11 @@ tasks.withType<DependencyUpdatesTask> {
 tasks.test {
 
     useJUnitPlatform()
+
+    jvmArgs(
+        "--enable-native-access=ALL-UNNAMED",
+        "--sun-misc-unsafe-memory-access=allow"
+    )
 
     testLogging {
         events(
