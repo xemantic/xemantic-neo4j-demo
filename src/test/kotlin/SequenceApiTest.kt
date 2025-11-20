@@ -20,14 +20,13 @@ import com.xemantic.kotlin.test.coroutines.should
 import com.xemantic.kotlin.test.have
 import com.xemantic.kotlin.test.sameAs
 import com.xemantic.neo4j.demo.sequences.sequenceApi
+import com.xemantic.neo4j.driver.Neo4jOperations
 import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.bodyAsChannel
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.json
-import io.ktor.server.application.install
-import io.ktor.server.config.MapApplicationConfig
-import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.server.plugins.di.dependencies
 import io.ktor.server.testing.*
 import io.ktor.utils.io.readUTF8Line
 import kotlinx.coroutines.Dispatchers
@@ -40,17 +39,11 @@ class SequenceApiTest {
 
     // first we assemble the environment and modules defining our app in test
     fun ApplicationTestBuilder.sequenceApiApp() {
-        environment {
-            config = MapApplicationConfig(
-                "neo4j.maxConcurrentSessions" to "90"
-            )
-        }
         application {
-            install(ContentNegotiation) {
-                json()
+            serverContentNegotiation()
+            dependencies.provide<Neo4jOperations> {
+                TestNeo4j.operations
             }
-            testNeo4jDriver()
-            neo4jSupport()
             sequenceApi()
         }
         client = createClient {
@@ -71,6 +64,7 @@ class SequenceApiTest {
         // then
         response should {
             have(status == HttpStatusCode.OK)
+            have(contentType() == ContentType.Text.Plain.withCharset(Charsets.UTF_8))
             body<String>() sameAs """
                 1
             """.trimIndent()
@@ -88,6 +82,7 @@ class SequenceApiTest {
         // then
         response should {
             have(status == HttpStatusCode.OK)
+            have(contentType() == ContentType.Text.Plain.withCharset(Charsets.UTF_8))
             body<String>() sameAs """
                 1
                 2

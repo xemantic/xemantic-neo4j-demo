@@ -17,27 +17,51 @@
 package com.xemantic.neo4j.demo
 
 import io.ktor.http.ContentType
-import io.ktor.server.response.respondTextWriter
+import io.ktor.http.withCharset
+import io.ktor.server.response.respondOutputStream
 import io.ktor.server.routing.RoutingContext
 import kotlinx.coroutines.flow.Flow
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.encodeToStream
+import java.io.OutputStream
 
+@OptIn(ExperimentalSerializationApi::class)
 suspend inline fun <reified T> RoutingContext.respondStreaming(
     flow: Flow<T>
 ) {
-    call.respondTextWriter(
-        contentType = ContentType.Application.Json
+    call.respondOutputStream(
+        contentType = ContentType.Application.Json.withCharset(
+            Charsets.UTF_8
+        )
     ) {
+
         write("[\n")
         flush()
+
         var first = true
-        flow.collect { item ->
-            if (!first) write(",\n")
-            first = false
-            write(Json.encodeToString<T>(item))
-            flush()
+
+        try {
+            flow.collect { item ->
+                if (!first) write(",\n")
+                flush()
+                first = false
+                Json.encodeToStream<T>(item, this)
+                flush()
+            }
+        } catch (e: Exception) { // Kotlin is not logging this by default
+            logger.error(e) {
+                "Unexpected error while streaming the response"
+            }
+            throw e
         }
+
         write("\n]")
         flush()
     }
+
 }
+
+fun OutputStream.write(value: String) = write(
+    value.toByteArray()
+)

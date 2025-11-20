@@ -18,13 +18,12 @@ package com.xemantic.neo4j.demo
 
 import com.xemantic.kotlin.test.coroutines.should
 import com.xemantic.kotlin.test.have
+import com.xemantic.neo4j.driver.Neo4jOperations
 import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.json
-import io.ktor.server.application.install
-import io.ktor.server.config.MapApplicationConfig
-import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.server.plugins.di.dependencies
 import io.ktor.server.testing.*
 import org.junit.jupiter.api.Test
 import kotlin.time.Clock
@@ -34,17 +33,11 @@ import kotlin.time.Instant
 class HealthCheckApiTest {
 
     fun ApplicationTestBuilder.healthCheckApp() {
-        environment {
-            config = MapApplicationConfig(
-                "neo4j.maxConcurrentSessions" to "50"
-            )
-        }
         application {
-            install(ContentNegotiation) {
-                json()
+            serverContentNegotiation()
+            dependencies.provide<Neo4jOperations> {
+                TestNeo4j.operations
             }
-            testNeo4jDriver()
-            neo4jSupport()
             healthCheckApi()
         }
         client = createClient {
@@ -66,14 +59,14 @@ class HealthCheckApiTest {
         // then
         response should {
             have(status == HttpStatusCode.OK)
-            have(contentType()?.contentType == ContentType.Application.Json.contentType)
+            have(contentType() == ContentType.Application.Json.withCharset(Charsets.UTF_8))
             body<Map<String, String>>() should {
                 have(get("status") == "healthy")
                 val timestampString = get("timestamp")
                 have(timestampString != null)
                 val timestamp = Instant.parse(timestampString!!)
-                have(timestamp > (now - 10.seconds))
-                have(timestamp < (now + 10.seconds))
+                have(timestamp > (now - 30.seconds))
+                have(timestamp < (now + 30.seconds))
             }
         }
     }

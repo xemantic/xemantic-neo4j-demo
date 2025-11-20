@@ -16,8 +16,10 @@
 
 package com.xemantic.neo4j.demo.sequences
 
+import com.xemantic.neo4j.demo.initializeLogging
 import com.xemantic.neo4j.driver.DispatchedNeo4jOperations
 import com.xemantic.neo4j.driver.Neo4jOperations
+import com.xemantic.neo4j.driver.SessionConfig
 import io.ktor.http.ContentType
 import io.ktor.server.application.Application
 import io.ktor.server.engine.embeddedServer
@@ -62,6 +64,8 @@ fun Application.sequenceApi() {
 
 fun main() {
 
+    initializeLogging()
+
     val neo4jUri = System.getenv("NEO4J_URI")
     val neo4jUser = System.getenv("NEO4J_USER")
     val neo4jPassword = System.getenv("NEO4J_PASSWORD")
@@ -73,15 +77,19 @@ fun main() {
         verifyConnectivity()
     }
 
-    // this should be no greater than driver's max session limit witch is 100 by default
-    val dispatcher = Dispatchers.IO.limitedParallelism(90)
-
     val neo4jOperations = DispatchedNeo4jOperations(
-        driver, dispatcher
+        driver = driver,
+        // this should be no greater than driver's max session limit witch is 100 by default
+        dispatcher = Dispatchers.IO.limitedParallelism(90),
+        defaultSessionConfig = SessionConfig {
+            database = "people"
+        }
     )
 
     embeddedServer(Netty, port = 8080) {
-        dependencies.provide<Neo4jOperations> { neo4jOperations }
+        // will make sure the driver is closed on shutdown
+        dependencies.provide { driver }
+        dependencies.provide { neo4jOperations }
         sequenceApi()
     }.start(wait = true)
 

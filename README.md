@@ -41,7 +41,6 @@ You might be asked to review the integration tests which also serve as an execut
 
 Soon we will add:
 - automatic Open API documentation
-- database migrations
 - Docker configuration
 
 I hope it will work well for you. Please give us your feedback on
@@ -257,6 +256,47 @@ The demo includes a full CRUD API for managing persons and relationships:
 - `GET /people/{id}` - Get a specific person
 - `POST /people/{id}/knows/{otherId}` - Create a KNOWS relationship
 - `GET /people/{id}/friends` - Get friends via graph traversal
+
+### Database Migrations
+
+This project uses Neo4j Migrations for schema versioning and evolution. Migrations are stored in `src/main/resources/neo4j/migrations/` and follow a version-based naming convention.
+
+**Migration Naming Convention:**
+- Format: `V{version}__{description}.cypher`
+- Example: `V001__Create_person_schema.cypher`
+- Versions are zero-padded integers (001, 002, 003, etc.)
+- Description uses underscores instead of spaces
+
+**Adding a New Migration:**
+
+1. Create a new migration file in `src/main/resources/neo4j/migrations/`
+2. Follow the naming convention with the next sequential version number
+3. Write your Cypher DDL statements (constraints, indexes, etc.)
+4. Add comments explaining the purpose and impact of the migration
+
+**Example:**
+
+```cypher
+// V003__Add_person_email_constraint.cypher
+// Add email uniqueness constraint to support email-based authentication
+
+CREATE CONSTRAINT person_email_unique IF NOT EXISTS
+FOR (p:Person) REQUIRE p.email IS UNIQUE;
+```
+
+**Migration Execution:**
+
+Migrations run automatically when the application starts using the Neo4j Migrations library. The migration history is tracked in the Neo4j database itself.
+
+**Current Migrations:**
+- `V001__Create_person_schema.cypher` - Initial Person node with ID constraint, name index, and createdAt temporal index
+
+**Best Practices:**
+- Always use `IF NOT EXISTS` clauses for idempotency
+- Never modify existing migration files (create new ones instead)
+- Test migrations with embedded Neo4j in your test suite
+- Document the business reason for each schema change
+- Keep migrations focused on a single logical change
 
 ### Key Implementation Files
 

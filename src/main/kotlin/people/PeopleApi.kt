@@ -25,6 +25,8 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
 import io.ktor.server.plugins.di.dependencies
+import org.neo4j.driver.exceptions.ClientException
+import org.neo4j.driver.exceptions.NoSuchRecordException
 
 /**
  * The main application module.
@@ -38,8 +40,22 @@ fun Application.peopleApi() {
         // Create a person node
         post("/people") {
             val request = call.receive<CreatePersonRequest>()
-            val person = peopleRepository.save(request)
-            call.respond(HttpStatusCode.Created, person)
+            try {
+                val person = peopleRepository.save(request)
+                call.respond(HttpStatusCode.Created, person)
+            } catch (e: ClientException) {
+                // Check if it's a constraint violation (duplicate ID)
+                when (e.code()) {
+                    "Neo.ClientError.Schema.ConstraintValidationFailed",
+                    "Neo.ClientError.Schema.ConstraintViolation" -> {
+                        call.respond(
+                            HttpStatusCode.Conflict,
+                            mapOf("error" to "Person with this ID already exists")
+                        )
+                    }
+                    else -> throw e
+                }
+            }
         }
 
         // List all persons
@@ -67,8 +83,16 @@ fun Application.peopleApi() {
         post("/people/{id}/knows/{otherId}") {
             val id = call.parameters["id"]!!
             val otherId = call.parameters["otherId"]!!
-            val relationship = peopleRepository.saveKnows(id, otherId)
-            call.respond(HttpStatusCode.Created, relationship)
+            try {
+                val relationship = peopleRepository.saveKnows(id, otherId)
+                call.respond(HttpStatusCode.Created, relationship)
+            } catch (e: NoSuchRecordException) {
+                // One or both persons don't exist
+                call.respond(
+                    HttpStatusCode.NotFound,
+                    mapOf("error" to "One or both persons not found")
+                )
+            }
         }
 
         // Get friends (persons that this person knows)

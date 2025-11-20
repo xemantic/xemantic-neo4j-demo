@@ -16,14 +16,10 @@
 
 package com.xemantic.neo4j.demo
 
+import ac.simons.neo4j.migrations.core.Migrations
+import ac.simons.neo4j.migrations.core.MigrationsConfig
 import com.xemantic.neo4j.driver.DispatchedNeo4jOperations
 import com.xemantic.neo4j.driver.Neo4jOperations
-import io.ktor.server.application.Application
-import io.ktor.server.config.property
-import io.ktor.server.plugins.di.annotations.Property
-import io.ktor.server.plugins.di.dependencies
-import io.ktor.server.plugins.di.resolve
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.serialization.Serializable
 import org.neo4j.driver.AuthTokens
@@ -42,28 +38,58 @@ data class Neo4jConfig(
 )
 
 fun neo4jDriver(
-    @Property("neo4j") config: Neo4jConfig
+    config: Neo4jConfig
 ): Driver = GraphDatabase.driver(
     config.uri,
     AuthTokens.basic(config.user, config.password)
 ).apply {
     verifyConnectivity()
+    // Apply migrations after connectivity is verified but before driver is used
+    applyMigrations(driver = this)
 }
 
-fun Application.neo4jSupport() {
-    val maxConcurrentSessions = property<Int>("neo4j.maxConcurrentSessions")
-    dependencies.key<CoroutineDispatcher>("neo4j") {
-        provide {
-            Dispatchers.IO.limitedParallelism(
-                parallelism = maxConcurrentSessions,
-                name = "neo4j"
-            )
-        }
+fun neo4jOperations(
+    driver: Driver,
+    config: Neo4jConfig
+): Neo4jOperations = DispatchedNeo4jOperations(
+    driver = driver,
+    dispatcher = Dispatchers.IO.limitedParallelism(
+        parallelism = config.maxConcurrentSessions,
+        name = "neo4j"
+    )
+)
+
+/**
+ * Applies Neo4j migrations.
+ *
+ * Migration location: `classpath:neo4j/migrations
+ *
+ * If any migration fails, an exception is thrown and the application will not start.
+ *
+ * @param driver The Neo4j driver with verified connectivity
+ * @throws Exception if migrations fail
+ */
+fun applyMigrations(
+    driver: Driver,
+) {
+
+    logger.info { "Applying migrations..." }
+
+    val appMigrationsConfig = MigrationsConfig.builder()
+        .withLocationsToScan("classpath:neo4j/migrations")
+        .withTransactionMode(MigrationsConfig.TransactionMode.PER_STATEMENT)
+        .build()
+
+    val appMigrations = Migrations(appMigrationsConfig, driver)
+
+    try {
+        appMigrations.apply()
+        logger.info { "Migrations applied" }
+    } catch (e: Exception) {
+        logger.error(e) { "Failed to apply application migrations" }
+        throw e
     }
-    dependencies.provide<Neo4jOperations> {
-        DispatchedNeo4jOperations(
-            driver = resolve<Driver>(),
-            dispatcher = resolve<CoroutineDispatcher>("neo4j")
-        )
-    }
+
+    logger.info { "All migrations applied successfully" }
+
 }

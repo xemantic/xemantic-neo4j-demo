@@ -46,7 +46,9 @@ kotlin {
         freeCompilerArgs.addAll(
             "-Xjdk-release=$javaTarget"
         )
-        optIn.addAll("kotlin.time.ExperimentalTime")
+        optIn.addAll(
+            "kotlin.time.ExperimentalTime"
+        )
         extraWarnings = true
         progressiveMode = true
     }
@@ -60,6 +62,7 @@ tasks.withType<JavaCompile>().configureEach {
 dependencies {
     implementation(libs.neo4j.driver)
     implementation(libs.xemantic.neo4j.kotlin.driver)
+    implementation(libs.neo4j.migrations)
 
     implementation(libs.ktor.server.core)
     implementation(libs.ktor.server.netty)
@@ -74,7 +77,8 @@ dependencies {
     implementation(libs.ktor.serialization.kotlinx.json)
     implementation(libs.ktor.serialization.kotlinx.xml)
 
-    implementation(libs.slf4j.jdk.platform.logging)
+    implementation(libs.kotlin.logging)
+    implementation(libs.jul.to.slf4j)
     implementation(libs.logback.classic)
 
     testImplementation(libs.kotlin.test)

@@ -18,52 +18,38 @@ package com.xemantic.neo4j.demo
 
 import com.xemantic.kotlin.test.coroutines.should
 import com.xemantic.kotlin.test.have
+import com.xemantic.kotlin.test.sameAsJson
+import com.xemantic.neo4j.demo.people.CreatePersonRequest
 import com.xemantic.neo4j.demo.people.Person
 import com.xemantic.neo4j.demo.people.Relationship
 import com.xemantic.neo4j.demo.people.peopleApi
 import com.xemantic.neo4j.demo.people.peopleRepository
-import com.xemantic.neo4j.driver.DispatchedNeo4jOperations
+import com.xemantic.neo4j.driver.Neo4jOperations
 import io.ktor.client.call.*
 import io.ktor.client.request.*
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
-import io.ktor.server.application.install
-import io.ktor.server.config.MapApplicationConfig
-import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.server.plugins.di.dependencies
 import io.ktor.server.testing.*
-import kotlinx.coroutines.Dispatchers
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
-import kotlin.time.Clock
-import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Instant
 
 class PeopleApiTest {
 
-    private val driver = TestNeo4j.driver()
-
-    private val neo4j = DispatchedNeo4jOperations(
-        driver = driver,
-        dispatcher = Dispatchers.IO.limitedParallelism(90)
-    )
-
     @AfterEach
     fun cleanDatabase() {
-        driver.cleanDatabase()
+        TestNeo4j.cleanDatabase()
     }
 
     // first we assemble the environment and modules defining our app in test
     fun ApplicationTestBuilder.peopleApiApp() {
-        environment {
-            config = MapApplicationConfig(
-                "neo4j.maxConcurrentSessions" to "50"
-            )
-        }
         application {
-            install(ContentNegotiation) {
-                json()
+            serverContentNegotiation()
+            dependencies.provide<Neo4jOperations> {
+                TestNeo4j.operations
             }
-            testNeo4jDriver()
-            neo4jSupport()
             peopleRepository()
             peopleApi()
         }
@@ -75,81 +61,52 @@ class PeopleApiTest {
     }
 
     @Test
-    fun `should create a person`() = testApplication {
-        // given
-        peopleApiApp()
-        val now = Clock.System.now()
+    fun `should get a person and return JSON`() = testApplication {
+    // given
+    peopleApiApp()
 
-        // when
-        val response = client.post("/people") {
-            contentType(ContentType.Application.Json)
-            setBody("""
-                {
-                    "id": "alice",
-                    "name": "Alice",
-                    "age": 30
-                }
-            """.trimIndent())
-        }
+    TestNeo4j.populate("""
+        CREATE (p:Person {
+          id: 'alice',
+          name: 'Alice',
+          age: 30,
+          createdAt: datetime('2025-01-15T10:30:00Z'),
+          updatedAt: datetime('2025-01-15T10:30:00Z')
+        })
+    """.trimIndent())
 
-        // then
-        response should {
-            have(status == HttpStatusCode.Created)
-            body<Person>() should {
-                have(id == "alice")
-                have(name == "Alice")
-                have(age == 30)
-                have(createdAt > (now - 10.seconds))
-                have(updatedAt > (now - 10.seconds))
+    // when
+    val response = client.get("/people/alice")
+
+    // then
+    response should {
+        have(status == HttpStatusCode.OK)
+        have(contentType() == ContentType.Application.Json.withCharset(Charsets.UTF_8))
+        bodyAsText() sameAsJson """
+            {
+              "id": "alice",
+              "name": "Alice",
+              "age": 30,
+              "createdAt": "2025-01-15T10:30:00Z",
+              "updatedAt": "2025-01-15T10:30:00Z"
             }
-        }
+        """.trimIndent()
     }
+}
 
     @Test
-    fun `should list all people`() = testApplication {
+    fun `should get a person and deserialize to Person instance`() = testApplication {
         // given
         peopleApiApp()
-        val now = Clock.System.now()
 
-        neo4j.populate("""
-            CREATE (p1:Person {id: 'alice', name: 'Alice', age: 30, createdAt: datetime(), updatedAt: datetime()})
-            CREATE (p2:Person {id: 'bob', name: 'Bob', age: 25, createdAt: datetime(), updatedAt: datetime()})
-        """.trimIndent())
-
-        // when
-        val response = client.get("/people")
-
-        // then
-        response should {
-            have(status == HttpStatusCode.OK)
-            body<List<Person>>() should {
-                have(size == 2)
-                get(0) should {
-                    have(id == "alice")
-                    have(name == "Alice")
-                    have(age == 30)
-                    have(createdAt > (now - 10.seconds))
-                    have(updatedAt > (now - 10.seconds))
-                }
-                get(1) should {
-                    have(id == "bob")
-                    have(name == "Bob")
-                    have(age == 25)
-                    have(createdAt > (now - 10.seconds))
-                    have(updatedAt > (now - 10.seconds))
-                }
-            }
-        }
-    }
-
-    @Test
-    fun `should get a specific person`() = testApplication {
-        // given
-        peopleApiApp()
-        val now = Clock.System.now()
-
-        neo4j.populate("""
-            CREATE (p1:Person {id: 'alice', name: 'Alice', age: 30, createdAt: datetime(), updatedAt: datetime()})
+        TestNeo4j.populate("""
+            CREATE (p:Person {
+              id: 'alice',
+              name: 'Alice',
+              age: 30,
+              createdAt: datetime('2025-01-15T10:30:00Z'),
+              updatedAt: datetime('2025-01-15T10:30:00Z')
+            })
         """.trimIndent())
 
         // when
@@ -158,13 +115,64 @@ class PeopleApiTest {
         // then
         response should {
             have(status == HttpStatusCode.OK)
+            have(contentType() == ContentType.Application.Json.withCharset(Charsets.UTF_8))
             body<Person>() should {
                 have(id == "alice")
                 have(name == "Alice")
                 have(age == 30)
-                have(createdAt > (now - 10.seconds))
-                have(updatedAt > (now - 10.seconds))
+                have(createdAt == Instant.parse("2025-01-15T10:30:00Z"))
+                have(updatedAt == Instant.parse("2025-01-15T10:30:00Z"))
             }
+        }
+    }
+
+    @Test
+    fun `should list all people`() = testApplication {
+        // given
+        peopleApiApp()
+
+        TestNeo4j.populate("""
+            CREATE (p1:Person {
+              id: 'alice',
+              name: 'Alice',
+              age: 30,
+              createdAt: datetime('2025-01-15T10:30:00Z'),
+              updatedAt: datetime('2025-01-15T10:30:00Z')
+            })
+            CREATE (p2:Person {
+              id: 'bob',
+              name: 'Bob',
+              age: 25,
+              createdAt: datetime('2025-01-15T11:00:00Z'),
+              updatedAt: datetime('2025-01-15T11:00:00Z')
+            })
+        """.trimIndent())
+
+        // when
+        val response = client.get("/people")
+
+        // then
+        response should {
+            have(status == HttpStatusCode.OK)
+            have(contentType() == ContentType.Application.Json.withCharset(Charsets.UTF_8))
+            bodyAsText() sameAsJson """
+                [
+                  {
+                    "id": "alice",
+                    "name": "Alice",
+                    "age": 30,
+                    "createdAt": "2025-01-15T10:30:00Z",
+                    "updatedAt": "2025-01-15T10:30:00Z"
+                  },
+                  {
+                    "id": "bob",
+                    "name": "Bob",
+                    "age": 25,
+                    "createdAt": "2025-01-15T11:00:00Z",
+                    "updatedAt": "2025-01-15T11:00:00Z"
+                  }
+                ]
+            """.trimIndent()
         }
     }
 
@@ -183,14 +191,25 @@ class PeopleApiTest {
     }
 
     @Test
-    fun `should create a KNOWS relationship between persons`() = testApplication {
+    fun `should create a KNOWS relationship and return JSON`() = testApplication {
         // given
         peopleApiApp()
-        val now = Clock.System.now()
 
-        neo4j.populate("""
-            CREATE (p1:Person {id: 'alice', name: 'Alice', age: 30, createdAt: datetime(), updatedAt: datetime()})
-            CREATE (p2:Person {id: 'bob', name: 'Bob', age: 25, createdAt: datetime(), updatedAt: datetime()})
+        TestNeo4j.populate("""
+            CREATE (p1:Person {
+              id: 'alice',
+              name: 'Alice',
+              age: 30,
+              createdAt: datetime('2025-01-15T10:30:00Z'),
+              updatedAt: datetime('2025-01-15T10:30:00Z')
+            })
+            CREATE (p2:Person {
+              id: 'bob',
+              name: 'Bob',
+              age: 25,
+              createdAt: datetime('2025-01-15T11:00:00Z'),
+              updatedAt: datetime('2025-01-15T11:00:00Z')
+            })
         """.trimIndent())
 
         // when
@@ -199,25 +218,87 @@ class PeopleApiTest {
         // then
         response should {
             have(status == HttpStatusCode.Created)
-            body<Relationship>() should {
-                have(type == "KNOWS")
-                have(from == "alice")
-                have(to == "bob")
-                have(createdAt > (now - 10.seconds))
-            }
+            have(contentType() == ContentType.Application.Json.withCharset(Charsets.UTF_8))
+            val relationship = body<Relationship>()
+            bodyAsText() sameAsJson """
+                {
+                  "type": "KNOWS",
+                  "from": "alice",
+                  "to": "bob",
+                  "createdAt": "${relationship.createdAt}"
+                }
+            """.trimIndent()
+        }
+    }
+
+    @Test
+    fun `should create a KNOWS relationship and deserialize to Relationship instance`() = testApplication {
+        // given
+        peopleApiApp()
+
+        TestNeo4j.populate("""
+            CREATE (p1:Person {
+              id: 'alice',
+              name: 'Alice',
+              age: 30,
+              createdAt: datetime('2025-01-15T10:30:00Z'),
+              updatedAt: datetime('2025-01-15T10:30:00Z')
+            })
+            CREATE (p2:Person {
+              id: 'bob',
+              name: 'Bob',
+              age: 25,
+              createdAt: datetime('2025-01-15T11:00:00Z'),
+              updatedAt: datetime('2025-01-15T11:00:00Z')
+            })
+        """.trimIndent())
+
+        // when
+        val response = client.post("/people/alice/knows/bob")
+
+        // then
+        response should {
+            have(status == HttpStatusCode.Created)
+            have(contentType() == ContentType.Application.Json.withCharset(Charsets.UTF_8))
+            val relationship = body<Relationship>()
+            bodyAsText() sameAsJson """
+                {
+                  "type": "KNOWS",
+                  "from": "alice",
+                  "to": "bob",
+                  "createdAt": "${relationship.createdAt}"
+                }
+            """.trimIndent()
         }
     }
 
     @Test
     fun `should get friends of a person`() = testApplication {
         // given
-        val now = Clock.System.now()
         peopleApiApp()
 
-        neo4j.populate("""
-            CREATE (p1:Person {id: 'alice', name: 'Alice', age: 30, createdAt: datetime(), updatedAt: datetime()})
-            CREATE (p2:Person {id: 'bob', name: 'Bob', age: 25, createdAt: datetime(), updatedAt: datetime()})
-            CREATE (p3:Person {id: 'charlie', name: 'Charlie', age: 35, createdAt: datetime(), updatedAt: datetime()})
+        TestNeo4j.populate("""
+            CREATE (p1:Person {
+              id: 'alice',
+              name: 'Alice',
+              age: 30,
+              createdAt: datetime('2025-01-15T10:30:00Z'),
+              updatedAt: datetime('2025-01-15T10:30:00Z')
+            })
+            CREATE (p2:Person {
+              id: 'bob',
+              name: 'Bob',
+              age: 25,
+              createdAt: datetime('2025-01-15T11:00:00Z'),
+              updatedAt: datetime('2025-01-15T11:00:00Z')
+            })
+            CREATE (p3:Person {
+              id: 'charlie',
+              name: 'Charlie',
+              age: 35,
+              createdAt: datetime('2025-01-15T11:30:00Z'),
+              updatedAt: datetime('2025-01-15T11:30:00Z')
+            })
             CREATE (p1)-[:KNOWS]->(p2)
             CREATE (p1)-[:KNOWS]->(p3)
         """.trimIndent())
@@ -228,23 +309,154 @@ class PeopleApiTest {
         // then
         response should {
             have(status == HttpStatusCode.OK)
-            body<List<Person>>() should {
-                have(size == 2)
-                get(0) should {
-                    have(id == "bob")
-                    have(name == "Bob")
-                    have(age == 25)
-                    have(createdAt > (now - 10.seconds))
-                    have(updatedAt > (now - 10.seconds))
+            have(contentType() == ContentType.Application.Json.withCharset(Charsets.UTF_8))
+            bodyAsText() sameAsJson """
+                [
+                  {
+                    "id": "bob",
+                    "name": "Bob",
+                    "age": 25,
+                    "createdAt": "2025-01-15T11:00:00Z",
+                    "updatedAt": "2025-01-15T11:00:00Z"
+                  },
+                  {
+                    "id": "charlie",
+                    "name": "Charlie",
+                    "age": 35,
+                    "createdAt": "2025-01-15T11:30:00Z",
+                    "updatedAt": "2025-01-15T11:30:00Z"
+                  }
+                ]
+            """.trimIndent()
+        }
+    }
+
+    @Test
+    fun `should create a person and return JSON`() = testApplication {
+        // given
+        peopleApiApp()
+
+        // when
+        val response = client.post("/people") {
+            contentType(ContentType.Application.Json)
+            setBody(CreatePersonRequest(
+                id = "alice",
+                name = "Alice",
+                age = 30
+            ))
+        }
+
+        // then
+        response should {
+            have(status == HttpStatusCode.Created)
+            have(contentType() == ContentType.Application.Json.withCharset(Charsets.UTF_8))
+            val person = body<Person>()
+            bodyAsText() sameAsJson """
+                {
+                  "id": "alice",
+                  "name": "Alice",
+                  "age": 30,
+                  "createdAt": "${person.createdAt}",
+                  "updatedAt": "${person.updatedAt}"
                 }
-                get(1) should {
-                    have(id == "charlie")
-                    have(name == "Charlie")
-                    have(age == 35)
-                    have(createdAt > (now - 10.seconds))
-                    have(updatedAt > (now - 10.seconds))
+            """.trimIndent()
+        }
+    }
+
+    @Test
+    fun `should create a person without age and return JSON`() = testApplication {
+        // given
+        peopleApiApp()
+
+        // when
+        val response = client.post("/people") {
+            contentType(ContentType.Application.Json)
+            setBody(CreatePersonRequest(
+                id = "bob",
+                name = "Bob"
+            ))
+        }
+
+        // then
+        response should {
+            have(status == HttpStatusCode.Created)
+            have(contentType() == ContentType.Application.Json.withCharset(Charsets.UTF_8))
+            val person = body<Person>()
+            bodyAsText() sameAsJson """
+                {
+                  "id": "bob",
+                  "name": "Bob",
+                  "createdAt": "${person.createdAt}",
+                  "updatedAt": "${person.updatedAt}"
                 }
-            }
+            """.trimIndent()
+        }
+    }
+
+    @Test
+    fun `should fail when creating person with duplicate ID`() = testApplication {
+        // given
+        peopleApiApp()
+
+        TestNeo4j.populate("""
+            CREATE (p:Person {
+              id: 'alice',
+              name: 'Alice',
+              age: 30,
+              createdAt: datetime('2025-01-15T10:30:00Z'),
+              updatedAt: datetime('2025-01-15T10:30:00Z')
+            })
+        """.trimIndent())
+
+        // when
+        val response = client.post("/people") {
+            contentType(ContentType.Application.Json)
+            setBody(CreatePersonRequest(
+                id = "alice",
+                name = "Another Alice",
+                age = 25
+            ))
+        }
+
+        // then
+        response should {
+            have(status == HttpStatusCode.Conflict)
+            have(contentType() == ContentType.Application.Json.withCharset(Charsets.UTF_8))
+            bodyAsText() sameAsJson """
+                {
+                  "error": "Person with this ID already exists"
+                }
+            """.trimIndent()
+        }
+    }
+
+    @Test
+    fun `should fail when creating relationship with non-existent person`() = testApplication {
+        // given
+        peopleApiApp()
+
+        TestNeo4j.populate("""
+            CREATE (p:Person {
+              id: 'alice',
+              name: 'Alice',
+              age: 30,
+              createdAt: datetime('2025-01-15T10:30:00Z'),
+              updatedAt: datetime('2025-01-15T10:30:00Z')
+            })
+        """.trimIndent())
+
+        // when
+        val response = client.post("/people/alice/knows/nonexistent")
+
+        // then
+        response should {
+            have(status == HttpStatusCode.NotFound)
+            have(contentType() == ContentType.Application.Json.withCharset(Charsets.UTF_8))
+            bodyAsText() sameAsJson """
+                {
+                  "error": "One or both persons not found"
+                }
+            """.trimIndent()
         }
     }
 

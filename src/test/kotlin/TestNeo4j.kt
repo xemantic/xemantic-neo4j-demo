@@ -16,8 +16,8 @@
 
 package com.xemantic.neo4j.demo
 
-import io.ktor.server.application.Application
-import io.ktor.server.plugins.di.dependencies
+import com.xemantic.neo4j.driver.Neo4jOperations
+import org.intellij.lang.annotations.Language
 import org.neo4j.configuration.connectors.BoltConnector
 import org.neo4j.configuration.connectors.HttpConnector
 import org.neo4j.driver.AuthTokens
@@ -28,7 +28,11 @@ import org.neo4j.harness.internal.InProcessNeo4jBuilder
 
 object TestNeo4j {
 
-    private val neo4j: Neo4j by lazy {
+    init {
+        initializeLogging()
+    }
+
+    private val db: Neo4j by lazy {
         InProcessNeo4jBuilder()
             .withDisabledServer()
             .withConfig(HttpConnector.enabled, false)
@@ -36,21 +40,43 @@ object TestNeo4j {
             .build()
     }
 
-    fun driver(): Driver = GraphDatabase.driver(
-        neo4j.boltURI(),
-        AuthTokens.none()
-    )
-
-}
-
-fun Driver.cleanDatabase() {
-    executableQuery(
-        "MATCH (n) DETACH DELETE n"
-    ).execute()
-}
-
-fun Application.testNeo4jDriver() {
-    dependencies.provide<Driver> {
-        TestNeo4j.driver()
+    private val config: Neo4jConfig by lazy {
+        Neo4jConfig(
+            uri = db.boltURI().toString(),
+            user = "",
+            password = "",
+            maxConcurrentSessions = 90
+        )
     }
+
+    private val driver: Driver by lazy {
+        GraphDatabase.driver(
+            config.uri,
+            AuthTokens.none()
+        ).apply {
+            applyMigrations(
+                driver = this
+            )
+        }
+    }
+
+    val operations: Neo4jOperations by lazy {
+        neo4jOperations(
+            driver = driver,
+            config = config
+        )
+    }
+
+    suspend fun populate(
+        @Language("cypher") query: String
+    ) {
+        operations.populate(query)
+    }
+
+    fun cleanDatabase() {
+        driver.executableQuery(
+            "MATCH (n) DETACH DELETE n"
+        ).execute()
+    }
+
 }
